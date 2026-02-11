@@ -50,11 +50,11 @@ EOT
     name                      = string
     remote_vpn_site_id        = string
     vpn_gateway_id            = string
-    internet_security_enabled = optional(bool, false)
-    vpn_link = object({
-      bandwidth_mbps  = optional(number, 10)
-      bgp_enabled     = optional(bool, false)
-      connection_mode = optional(string, "Default")
+    internet_security_enabled = optional(bool) # Default: false
+    vpn_link = list(object({
+      bandwidth_mbps  = optional(number) # Default: 10
+      bgp_enabled     = optional(bool)   # Default: false
+      connection_mode = optional(string) # Default: "Default"
       custom_bgp_address = optional(object({
         ip_address          = string
         ip_configuration_id = string
@@ -62,7 +62,7 @@ EOT
       dpd_timeout_seconds  = optional(number)
       egress_nat_rule_ids  = optional(set(string))
       ingress_nat_rule_ids = optional(set(string))
-      ipsec_policy = optional(object({
+      ipsec_policy = optional(list(object({
         dh_group                 = string
         encryption_algorithm     = string
         ike_encryption_algorithm = string
@@ -71,16 +71,16 @@ EOT
         pfs_group                = string
         sa_data_size_kb          = number
         sa_lifetime_sec          = number
-      }))
-      local_azure_ip_address_enabled        = optional(bool, false)
+      })))
+      local_azure_ip_address_enabled        = optional(bool) # Default: false
       name                                  = string
-      policy_based_traffic_selector_enabled = optional(bool, false)
-      protocol                              = optional(string, "IKEv2")
-      ratelimit_enabled                     = optional(bool, false)
-      route_weight                          = optional(number, 0)
+      policy_based_traffic_selector_enabled = optional(bool)   # Default: false
+      protocol                              = optional(string) # Default: "IKEv2"
+      ratelimit_enabled                     = optional(bool)   # Default: false
+      route_weight                          = optional(number) # Default: 0
       shared_key                            = optional(string)
       vpn_site_link_id                      = string
-    })
+    }))
     routing = optional(object({
       associated_route_table = string
       inbound_route_map_id   = optional(string)
@@ -95,5 +95,21 @@ EOT
       remote_address_ranges = set(string)
     }))
   }))
+  validation {
+    condition = alltrue([
+      for k, v in var.vpn_gateway_connections : (
+        length(v.vpn_link) >= 1
+      )
+    ])
+    error_message = "Each vpn_link list must contain at least 1 items"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.vpn_gateway_connections : (
+        alltrue([for item in v.vpn_link : (item.ipsec_policy == null || (length(item.ipsec_policy) >= 1))])
+      )
+    ])
+    error_message = "Each ipsec_policy list must contain at least 1 items"
+  }
 }
 
