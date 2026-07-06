@@ -111,5 +111,106 @@ EOT
     ])
     error_message = "Each ipsec_policy list must contain at least 1 items"
   }
+  validation {
+    condition = alltrue([
+      for k, v in var.vpn_gateway_connections : (
+        length(v.name) > 0
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.vpn_gateway_connections : (
+        v.routing == null || (v.routing.propagated_route_table == null || (v.routing.propagated_route_table.labels == null || (length(v.routing.propagated_route_table.labels) > 0)))
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  # --- Unconfirmed validation candidates, derived from azurerm_vpn_gateway_connection's provider source ---
+  # Not auto-enabled: either a bespoke provider validator we can't safely translate,
+  # or a path that crosses a list-typed block (needs its own for_each wrapping).
+  # Review, translate into a real validation{} block above, and delete once confirmed.
+  # path: vpn_gateway_id
+  #   source:    [from virtualwans.ValidateVpnGatewayID] !ok
+  # path: vpn_gateway_id
+  #   source:    [from virtualwans.ValidateVpnGatewayID] err != nil
+  # path: remote_vpn_site_id
+  #   source:    [from virtualwans.ValidateVpnSiteID] !ok
+  # path: remote_vpn_site_id
+  #   source:    [from virtualwans.ValidateVpnSiteID] err != nil
+  # path: routing.associated_route_table
+  #   source:    [from virtualwans.ValidateHubRouteTableID] !ok
+  # path: routing.associated_route_table
+  #   source:    [from virtualwans.ValidateHubRouteTableID] err != nil
+  # path: routing.inbound_route_map_id
+  #   source:    [from virtualwans.ValidateRouteMapID] !ok
+  # path: routing.inbound_route_map_id
+  #   source:    [from virtualwans.ValidateRouteMapID] err != nil
+  # path: routing.outbound_route_map_id
+  #   source:    [from virtualwans.ValidateRouteMapID] !ok
+  # path: routing.outbound_route_map_id
+  #   source:    [from virtualwans.ValidateRouteMapID] err != nil
+  # path: routing.propagated_route_table.route_table_ids[*]
+  #   source:    [from virtualwans.ValidateHubRouteTableID] !ok
+  # path: routing.propagated_route_table.route_table_ids[*]
+  #   source:    [from virtualwans.ValidateHubRouteTableID] err != nil
+  # path: vpn_link.name
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: vpn_link.vpn_site_link_id
+  #   source:    [from virtualwans.ValidateVpnSiteLinkID] !ok
+  # path: vpn_link.vpn_site_link_id
+  #   source:    [from virtualwans.ValidateVpnSiteLinkID] err != nil
+  # path: vpn_link.dpd_timeout_seconds
+  #   condition: value >= 9 && value <= 3600
+  #   message:   must be between 9 and 3600
+  # path: vpn_link.egress_nat_rule_ids[*]
+  #   source:    [from virtualwans.ValidateNatRuleID] !ok
+  # path: vpn_link.egress_nat_rule_ids[*]
+  #   source:    [from virtualwans.ValidateNatRuleID] err != nil
+  # path: vpn_link.ingress_nat_rule_ids[*]
+  #   source:    [from virtualwans.ValidateNatRuleID] !ok
+  # path: vpn_link.ingress_nat_rule_ids[*]
+  #   source:    [from virtualwans.ValidateNatRuleID] err != nil
+  # path: vpn_link.connection_mode
+  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  # path: vpn_link.route_weight
+  #   condition: value >= 0
+  #   message:   must be at least 0
+  # path: vpn_link.protocol
+  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  # path: vpn_link.bandwidth_mbps
+  #   condition: value >= 1
+  #   message:   must be at least 1
+  # path: vpn_link.shared_key
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: vpn_link.ipsec_policy.sa_lifetime_sec
+  #   condition: value >= 300 && value <= 172799
+  #   message:   must be between 300 and 172799
+  # path: vpn_link.ipsec_policy.sa_data_size_kb
+  #   source:    validation.IntBetween(0, math.MaxInt32) - bound(s) not a literal int (e.g. a named constant like math.MaxInt32) - resolve manually
+  # path: vpn_link.ipsec_policy.encryption_algorithm
+  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  # path: vpn_link.ipsec_policy.integrity_algorithm
+  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  # path: vpn_link.ipsec_policy.ike_encryption_algorithm
+  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  # path: vpn_link.ipsec_policy.ike_integrity_algorithm
+  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  # path: vpn_link.ipsec_policy.dh_group
+  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  # path: vpn_link.ipsec_policy.pfs_group
+  #   source:    validation.StringInSlice value list is not a literal []string - likely a generated PossibleValuesFor*() helper; resolve separately
+  # path: vpn_link.custom_bgp_address.ip_address
+  #   source:    validation.IsIPv4Address(...) - no translation rule yet, add one
+  # path: vpn_link.custom_bgp_address.ip_configuration_id
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: traffic_selector_policy.local_address_ranges[*]
+  #   source:    validation.IsCIDR(...) - no translation rule yet, add one
+  # path: traffic_selector_policy.remote_address_ranges[*]
+  #   source:    validation.IsCIDR(...) - no translation rule yet, add one
 }
 
