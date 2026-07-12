@@ -55,10 +55,10 @@ EOT
       bandwidth_mbps  = optional(number) # Default: 10
       bgp_enabled     = optional(bool)   # Default: false
       connection_mode = optional(string) # Default: "Default"
-      custom_bgp_address = optional(object({
+      custom_bgp_address = optional(list(object({
         ip_address          = string
         ip_configuration_id = string
-      }))
+      })))
       dpd_timeout_seconds  = optional(number)
       egress_nat_rule_ids  = optional(set(string))
       ingress_nat_rule_ids = optional(set(string))
@@ -90,10 +90,10 @@ EOT
         route_table_ids = list(string)
       }))
     }))
-    traffic_selector_policy = optional(object({
+    traffic_selector_policy = optional(list(object({
       local_address_ranges  = set(string)
       remote_address_ranges = set(string)
-    }))
+    })))
   }))
   validation {
     condition = alltrue([
@@ -111,26 +111,13 @@ EOT
     ])
     error_message = "Each ipsec_policy list must contain at least 1 items"
   }
-  validation {
-    condition = alltrue([
-      for k, v in var.vpn_gateway_connections : (
-        length(v.name) > 0
-      )
-    ])
-    error_message = "must not be empty"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.vpn_gateway_connections : (
-        v.routing == null || (v.routing.propagated_route_table == null || (v.routing.propagated_route_table.labels == null || (length(v.routing.propagated_route_table.labels) > 0)))
-      )
-    ])
-    error_message = "must not be empty"
-  }
   # --- Unconfirmed validation candidates, derived from azurerm_vpn_gateway_connection's provider source ---
   # Not auto-enabled: either a bespoke provider validator we can't safely translate,
   # or a path that crosses a list-typed block (needs its own for_each wrapping).
   # Review, translate into a real validation{} block above, and delete once confirmed.
+  # path: name
+  #   condition: length(value) > 0
+  #   message:   must not be empty
   # path: vpn_gateway_id
   #   source:    [from virtualwans.ValidateVpnGatewayID] !ok
   # path: vpn_gateway_id
@@ -155,6 +142,9 @@ EOT
   #   source:    [from virtualwans.ValidateHubRouteTableID] !ok
   # path: routing.propagated_route_table.route_table_ids[*]
   #   source:    [from virtualwans.ValidateHubRouteTableID] err != nil
+  # path: routing.propagated_route_table.labels[*]
+  #   condition: length(value) > 0
+  #   message:   must not be empty
   # path: vpn_link.name
   #   condition: length(value) > 0
   #   message:   must not be empty

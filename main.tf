@@ -13,7 +13,7 @@ resource "azurerm_vpn_gateway_connection" "vpn_gateway_connections" {
       bgp_enabled     = vpn_link.value.bgp_enabled
       connection_mode = vpn_link.value.connection_mode
       dynamic "custom_bgp_address" {
-        for_each = vpn_link.value.custom_bgp_address != null ? [vpn_link.value.custom_bgp_address] : []
+        for_each = vpn_link.value.custom_bgp_address != null ? vpn_link.value.custom_bgp_address : []
         content {
           ip_address          = custom_bgp_address.value.ip_address
           ip_configuration_id = custom_bgp_address.value.ip_configuration_id
@@ -63,7 +63,7 @@ resource "azurerm_vpn_gateway_connection" "vpn_gateway_connections" {
   }
 
   dynamic "traffic_selector_policy" {
-    for_each = each.value.traffic_selector_policy != null ? [each.value.traffic_selector_policy] : []
+    for_each = each.value.traffic_selector_policy != null ? each.value.traffic_selector_policy : []
     content {
       local_address_ranges  = traffic_selector_policy.value.local_address_ranges
       remote_address_ranges = traffic_selector_policy.value.remote_address_ranges
