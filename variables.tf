@@ -50,11 +50,11 @@ EOT
     name                      = string
     remote_vpn_site_id        = string
     vpn_gateway_id            = string
-    internet_security_enabled = optional(bool) # Default: false
+    internet_security_enabled = optional(bool)
     vpn_link = list(object({
-      bandwidth_mbps  = optional(number) # Default: 10
-      bgp_enabled     = optional(bool)   # Default: false
-      connection_mode = optional(string) # Default: "Default"
+      bandwidth_mbps  = optional(number)
+      bgp_enabled     = optional(bool)
+      connection_mode = optional(string)
       custom_bgp_address = optional(list(object({
         ip_address          = string
         ip_configuration_id = string
@@ -72,12 +72,12 @@ EOT
         sa_data_size_kb          = number
         sa_lifetime_sec          = number
       })))
-      local_azure_ip_address_enabled        = optional(bool) # Default: false
+      local_azure_ip_address_enabled        = optional(bool)
       name                                  = string
-      policy_based_traffic_selector_enabled = optional(bool)   # Default: false
-      protocol                              = optional(string) # Default: "IKEv2"
-      ratelimit_enabled                     = optional(bool)   # Default: false
-      route_weight                          = optional(number) # Default: 0
+      policy_based_traffic_selector_enabled = optional(bool)
+      protocol                              = optional(string)
+      ratelimit_enabled                     = optional(bool)
+      route_weight                          = optional(number)
       shared_key                            = optional(string)
       vpn_site_link_id                      = string
     }))
@@ -102,14 +102,6 @@ EOT
       )
     ])
     error_message = "Each vpn_link list must contain at least 1 items"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.vpn_gateway_connections : (
-        alltrue([for item in v.vpn_link : (item.ipsec_policy == null || (length(item.ipsec_policy) >= 1))])
-      )
-    ])
-    error_message = "Each ipsec_policy list must contain at least 1 items"
   }
   # --- Unconfirmed validation candidates, derived from azurerm_vpn_gateway_connection's provider source ---
   # Not auto-enabled: either a bespoke provider validator we can't safely translate,
